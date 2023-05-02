@@ -3,6 +3,7 @@ package data
 import (
 	"encoding/json"
 	"fmt"
+	"inventoryService/database"
 	"inventoryService/models"
 	"io/ioutil"
 	"log"
@@ -55,7 +56,19 @@ func loadProductMap() (map[int]models.Product, error) {
 	return prodMap, err
 }
 
-func GetProduct(productID int) *models.Product {
+func GetProduct(productID int) (*models.Product, error) {
+	row := database.DbConn.QueryRow(`SELECT productId, 
+	manufacturer, 
+	sku, 
+	upc, 
+	pricePerUnit, 
+	quantityOnHand, 
+	productName 
+	FROM products WHER productId =?`, productID)
+
+	product := &models.Product{}
+
+	row.Scan(&product.Manufacturer, &product.Sku, &product.Upc, &product.PricePerUnit, &product.QuantityOnHand, &product.ProductName)
 	productMap.RLock()
 	defer productMap.RUnlock()
 
@@ -68,23 +81,38 @@ func GetProduct(productID int) *models.Product {
 	return nil
 }
 
-func removeProduct(productID int) {
+func RemoveProduct(productID int) {
 	productMap.Lock()
 	defer productMap.Unlock()
 
 	delete(productMap.prodMap, productID)
 }
 
-func GetProductList() []models.Product {
-	productMap.RLock()
-	defer productMap.RUnlock()
+func GetProductList() ([]models.Product, error) {
+	results, err := database.DbConn.Query(`SELECT productId, 
+	manufacturer, 
+	sku, 
+	upc, 
+	pricePerUnit, 
+	quantityOnHand, 
+	productName 
+	FROM products`)
 
-	products := make([]models.Product, 0, len(productMap.prodMap))
-
-	for _, prod := range productMap.prodMap {
-		products = append(products, prod)
+	if err != nil {
+		return nil, err
 	}
-	return products
+	defer results.Close()
+	products := make([]models.Product, 0)
+
+	for results.Next() {
+		var product models.Product
+
+		//fields have to be in the same order as query above
+		results.Scan(&product.Manufacturer, &product.Sku, &product.Upc, &product.PricePerUnit, &product.QuantityOnHand, &product.ProductName)
+		products = append(products, product)
+	}
+
+	return products, nil
 }
 
 func getProductIds() []int {
@@ -113,7 +141,7 @@ func AddOrUpdateProduct(product models.Product) (int, error) {
 	addOrUpdateId := -1
 
 	if product.ProductID > 0 {
-		oldProduct := getProduct(product.ProductID)
+		oldProduct := GetProduct(product.ProductID)
 
 		if oldProduct == nil {
 			return 0, fmt.Errorf("Product id [%d] does not exist", product.ProductID)
