@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "02/demos/01_basic_course_demo/after",
+                        "name":"02_demos_01_after"
+		},
+		{
+			"path": "02/demos/01_basic_course_demo/before",
+                        "name":"02_demos_01_before"
+		}
+	]
+}
