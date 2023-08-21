@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"sync"
 	"time"
 )
 
@@ -12,41 +13,54 @@ var rnd = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 func main() {
 
+	waitGroup := sync.WaitGroup{}
+	mutx := sync.RWMutex{}
+
+	cacheCh := make(chan Book)
+	dbCh := make(chan Book)
+
 	for i := 0; i < 10; i++ {
 		id := rnd.Intn(10) + 1
+		waitGroup.Add(2)
+		go func(id int, wg *sync.WaitGroup, mx *sync.RWMutex, ch chan Book) {
+			cacheBook, isInCache := queryCache(id, mx)
 
-		cacheBook, isInCache := queryCache(id)
+			if isInCache {
+				fmt.Println("from cache")
+				fmt.Println(cacheBook)
+			}
+			wg.Done()
+		}(id, &waitGroup, &mutx, cacheCh)
 
-		if isInCache {
-			fmt.Println("from cache")
-			fmt.Println(cacheBook)
-			continue
-		}
+		go func(id int, wg *sync.WaitGroup, mx *sync.RWMutex, ch chan Book) {
+			dbBook, isInDb := queryDatabase(id, mx)
 
-		dbBook, isInDb := queryDatabase(id)
-
-		if isInDb {
-			fmt.Println("from db")
-			fmt.Println(dbBook)
-			continue
-		}
-
-		fmt.Printf("Book with id  not found %v", id)
-		time.Sleep(150 * time.Millisecond)
+			if isInDb {
+				fmt.Println("from db")
+				fmt.Println(dbBook)
+			}
+			wg.Done()
+		}(id, &waitGroup, &mutx, dbCh)
 	}
+
 	fmt.Print("hi")
+	waitGroup.Wait()
 }
 
-func queryCache(id int) (Book, bool) {
+func queryCache(id int, mx *sync.RWMutex) (Book, bool) {
+	mx.RLock()
 	book, ok := cache[id]
+	mx.RUnlock()
 	return book, ok
 }
 
-func queryDatabase(id int) (Book, bool) {
-	time.Sleep(100 * time.Millisecond)
+func queryDatabase(id int, mx *sync.RWMutex) (Book, bool) {
+
 	for _, book := range books {
 		if book.ID == id {
+			mx.Lock()
 			cache[book.ID] = book
+			mx.Unlock()
 			return book, true
 		}
 	}
