@@ -1,0 +1,42 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Mirror finder",
+        "Description": "API service for finding the fastest mirror",
+        "Version": "0.1.1"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000",
+            "description": "Development"
+        }
+    ],
+    "paths": {
+        "/fastest-mirror": {
+            "get": {
+                "summary": "returns fastest mirror",
+                "description": "returns fastest mirror",
+                "responses": {
+                    "200": {
+                        "description": "Json object",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "fastest_mirror": {
+                                            "type": "string"
+                                        },
+                                        "latency": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
