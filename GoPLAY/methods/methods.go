@@ -1,23 +1,21 @@
 package methods
 
-type menuItem struct {
-	name   string
-	prices map[string]float64
+type MenuItem struct {
+	Name   string
+	Prices map[string]float64
 }
 
-type menu []menuItem
+type Menu []MenuItem
 
-func (menuList menu) print() {
+func (item *MenuItem) add() {
 
 }
 
-func(item *menuItem) add(){
-
-	
+var mydata Menu = Menu{
+	MenuItem{
+		Name: "yam",
+		Prices: map[string]float64{
+			"default": 1.24,
+		},
+	},
 }
-
-var data = menu{
-	{name: "latte", prices: map[string]float64{"small": 1.5}}
-}
-
-data.print()

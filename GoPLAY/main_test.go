@@ -6,8 +6,8 @@ func TestAdd(t *testing.T) {
 	//arrange
 	x, y := 1, 3
 	expect := 4
-	//act
 
+	//act
 	result := Add(x, y)
 
 	// assert

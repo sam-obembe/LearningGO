@@ -1,6 +1,7 @@
 package main
 
 import (
+	"demo/dicts"
 	"fmt"
 	"math"
 	"math/rand"
@@ -17,7 +18,10 @@ func main() {
 
 	//myRoutinesAndWaits()
 
-	concurrentLooping()
+	//concurrentLooping()
+
+	//messwithstrings.TryStringFormatting("Sam")
+	dicts.DictDabble()
 
 }
 
